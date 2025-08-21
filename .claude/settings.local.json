@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where node)",
+      "Bash(where npm)",
+      "Bash(node:*)",
+      "Bash(python:*)",
+      "Bash(copy:*)",
+      "Bash(cmd /c \"copy C:\\Users\\thoma\\OneDrive\\Desktop\\deepgem\\dg.bat C:\\Users\\thoma\\dg.bat\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

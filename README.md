@@ -7,17 +7,31 @@ It shows a fun ASCII banner: “deepgem by eeko systems”.
 
 ## Install
 
+### Super Quick Install (Windows)
+
+```bash
+# Clone the repo
+git clone https://github.com/eekosystems/deepgem
+cd deepgem
+
+# Run the one-click installer
+quickinstall.bat
+
+# That's it! Now you can use:
+deepgem chat "hello"
+```
+
 ### Quick Install (Recommended)
 
 ```bash
-# One-line installer (Linux/macOS)
-curl -sSL https://raw.githubusercontent.com/eekosystems/deepgem/main/install.sh | bash
-
-# Or install from PyPI
+# Install from PyPI (when published)
 pip install deepgem
 
-# Then verify your setup
-deepgem doctor
+# Run interactive setup wizard
+deepgem setup
+
+# Or use one-line installer (Linux/macOS)
+curl -sSL https://raw.githubusercontent.com/eekosystems/deepgem/main/install.sh | bash
 ```
 
 ### Manual Install
@@ -58,6 +72,20 @@ pip install .
 
 ## Quickstart
 
+### Super Simple Code Helper (dg command)
+```bash
+# Navigate to any project folder
+cd your-project
+
+# Use the super simple 'dg' command:
+dg "what does this code do?"
+dg "fix the bugs"
+dg "add error handling"
+dg "write unit tests"
+dg "refactor this code"
+```
+
+### Regular Commands
 ```bash
 # DeepSeek chat
 deepgem chat "Summarize the history of TCPA in 7 bullets."
@@ -87,10 +115,24 @@ export DEEPSEEK_API_KEY="sk-..."     # required
 # export GEMINI_BIN="gemini"                  # custom path to gemini
 ```
 
+## Setup Issues & Fixes
+
+### Windows Unicode/Emoji Display Issues
+- **Fixed:** UTF-8 encoding is automatically set for Windows consoles
+- If you see garbled characters, the fix is already included
+
+### NPM Not Found on Windows  
+- **Fixed:** Automatically detects `npm.cmd` on Windows
+- If Node.js is installed but npm isn't found, run: `winget install OpenJS.NodeJS`
+
+### The 'dg' Command
+- Created by `quickinstall.bat` or manually copy `dg.bat` to your PATH
+- Makes coding assistance super simple - just `dg "your request"`
+
 ## Notes
 - DeepSeek API is OpenAI-compatible; model IDs: `deepseek-chat` (non-thinking) and `deepseek-reasoner` (thinking).
 - Streaming is enabled by default for DeepSeek (use `--no-stream` to disable).
-- The router sends “code/tooling” prompts to Gemini CLI, long or “think step by step” prompts to DeepSeek Reasoner, and everything else to DeepSeek Chat.
+- The router sends "code/tooling" prompts to Gemini CLI, long or "think step by step" prompts to DeepSeek Reasoner, and everything else to DeepSeek Chat.
 
 ## Development
 

@@ -4,6 +4,14 @@ from typing import Optional, List
 import typer
 from rich.console import Console
 
+# Fix Windows console encoding for Unicode characters
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+    # Also set console code page to UTF-8
+    os.system("chcp 65001 >nul 2>&1")
+
 # OpenAI SDK works with DeepSeek via base_url
 from openai import OpenAI
 
@@ -170,6 +178,212 @@ def ask(
         raise typer.Exit(code=deepseek_chat(prompt, "deepseek-reasoner", system, stream=True))
     else:
         raise typer.Exit(code=deepseek_chat(prompt, "deepseek-chat", system, stream=True))
+
+@typer_app.command()
+def setup():
+    """Interactive setup wizard for deepgem - installs dependencies and configures API keys."""
+    import shutil
+    import platform
+    import getpass
+    from pathlib import Path
+    con.print("\n[bold cyan]Welcome to deepgem setup wizard![/bold cyan]")
+    con.print("This will help you install dependencies and configure API keys.\n")
+    
+    # Track what we set up
+    setup_complete = []
+    
+    # 1. Check Python version
+    py_version = sys.version_info
+    if py_version >= (3, 10):
+        con.print("✅ Python version: [green]" + platform.python_version() + "[/green]")
+    else:
+        con.print(f"❌ Python version: [red]{platform.python_version()}[/red] (requires 3.10+)")
+        con.print("[red]Please upgrade Python first: https://python.org/downloads[/red]")
+        raise typer.Exit(1)
+    
+    # 2. Check/Install Gemini CLI
+    gemini_path = shutil.which(os.environ.get("GEMINI_BIN", "gemini"))
+    if not gemini_path:
+        con.print("\n❌ Gemini CLI not found")
+        
+        # Check if npm is available (on Windows, look for npm.cmd)
+        npm_path = shutil.which("npm.cmd") if platform.system() == "Windows" else shutil.which("npm")
+        if npm_path:
+            response = typer.prompt("Would you like to install Gemini CLI now? (Y/n)", default="Y")
+            if response.lower() != 'n':
+                con.print("[dim]Installing @google/gemini-cli...[/dim]")
+                try:
+                    npm_cmd = ["npm.cmd" if platform.system() == "Windows" else "npm", "install", "-g", "@google/gemini-cli"]
+                    result = subprocess.run(
+                        npm_cmd,
+                        capture_output=True,
+                        text=True
+                    )
+                    if result.returncode == 0:
+                        con.print("✅ Gemini CLI installed successfully!")
+                        setup_complete.append("Gemini CLI")
+                    else:
+                        con.print(f"[yellow]⚠️  Failed to install Gemini CLI[/yellow]")
+                        if "EACCES" in result.stderr or "permission" in result.stderr.lower():
+                            con.print("[yellow]Try running with admin privileges or use:[/yellow]")
+                            con.print("[bold]sudo npm install -g @google/gemini-cli[/bold]")
+                except FileNotFoundError:
+                    con.print("[yellow]npm is not installed. Node.js is required for Gemini CLI.[/yellow]")
+                    con.print("\n[bold]To install Node.js:[/bold]")
+                    if platform.system() == "Windows":
+                        con.print("  Option 1: [cyan]winget install OpenJS.NodeJS[/cyan]")
+                        con.print("  Option 2: Download from [cyan]https://nodejs.org/[/cyan]")
+                        con.print("\n[yellow]After installing Node.js, restart your terminal and run 'deepgem setup' again.[/yellow]")
+                    else:
+                        con.print("  macOS:   [cyan]brew install node[/cyan]")
+                        con.print("  Linux:   [cyan]sudo apt install nodejs npm[/cyan]")
+                except Exception as e:
+                    con.print(f"[yellow]Error installing Gemini CLI: {e}[/yellow]")
+        else:
+            con.print("[yellow]npm not found. Node.js is required for Gemini CLI.[/yellow]")
+            con.print("\n[bold]To install Node.js:[/bold]")
+            if platform.system() == "Windows":
+                con.print("  Option 1: [cyan]winget install OpenJS.NodeJS[/cyan]")
+                con.print("  Option 2: Download from [cyan]https://nodejs.org/[/cyan]")
+                con.print("\n[yellow]After installing Node.js, restart your terminal and run 'deepgem setup' again.[/yellow]")
+            else:
+                con.print("  macOS:   [cyan]brew install node[/cyan]")
+                con.print("  Linux:   [cyan]sudo apt install nodejs npm[/cyan]")
+            con.print("\n[dim]Note: Gemini CLI is optional. DeepSeek features will still work.[/dim]")
+    else:
+        con.print(f"✅ Gemini CLI: [green]found[/green] at {gemini_path}")
+    
+    # 3. Setup DeepSeek API key
+    con.print("\n[bold]DeepSeek API Configuration[/bold]")
+    deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
+    
+    if deepseek_key:
+        con.print(f"✅ DeepSeek API key: [green]already configured[/green]")
+        response = typer.prompt("Would you like to update it? (y/N)", default="N")
+        if response.lower() == 'y':
+            deepseek_key = None
+    
+    if not deepseek_key:
+        con.print("\nGet your API key at: [cyan]https://platform.deepseek.com/[/cyan]")
+        key_input = getpass.getpass("Enter your DeepSeek API key (sk-...): ")
+        
+        if key_input:
+            if not key_input.startswith("sk-"):
+                con.print("[yellow]⚠️  Warning: Key should start with 'sk-'[/yellow]")
+            
+            # Test the key
+            con.print("[dim]Testing API key...[/dim]")
+            try:
+                test_client = OpenAI(api_key=key_input, base_url="https://api.deepseek.com")
+                test_client.models.list()
+                con.print("✅ API key validated successfully!")
+                
+                # Save the key
+                save_key_to_env("DEEPSEEK_API_KEY", key_input)
+                os.environ["DEEPSEEK_API_KEY"] = key_input
+                setup_complete.append("DeepSeek API key")
+                
+            except Exception as e:
+                con.print(f"[red]❌ API key validation failed: {e}[/red]")
+                response = typer.prompt("Save anyway? (y/N)", default="N")
+                if response.lower() == 'y':
+                    save_key_to_env("DEEPSEEK_API_KEY", key_input)
+                    os.environ["DEEPSEEK_API_KEY"] = key_input
+    
+    # 4. Setup Gemini API key (optional)
+    con.print("\n[bold]Gemini API Configuration (Optional)[/bold]")
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    
+    if gemini_key:
+        con.print(f"✅ Gemini API key: [green]already configured[/green]")
+    else:
+        con.print("Gemini CLI can use OAuth or API key authentication.")
+        con.print("Get API key at: [cyan]https://makersuite.google.com/app/apikey[/cyan]")
+        response = typer.prompt("Would you like to add a Gemini API key? (y/N)", default="N")
+        
+        if response.lower() == 'y':
+            key_input = getpass.getpass("Enter your Gemini API key: ")
+            if key_input:
+                save_key_to_env("GEMINI_API_KEY", key_input)
+                os.environ["GEMINI_API_KEY"] = key_input
+                setup_complete.append("Gemini API key")
+    
+    # 5. Final verification
+    con.print("\n" + "═" * 60)
+    con.print("[bold cyan]Setup Summary[/bold cyan]\n")
+    
+    if setup_complete:
+        con.print("[green]Successfully configured:[/green]")
+        for item in setup_complete:
+            con.print(f"  ✅ {item}")
+    
+    # Run doctor to show final status
+    con.print("\n[bold]Running system check...[/bold]")
+    con.print("─" * 60)
+    return doctor()
+
+def save_key_to_env(key_name: str, key_value: str):
+    """Save API key to .env file and appropriate shell config."""
+    import platform
+    from pathlib import Path
+    
+    # Save to .env file in current directory
+    env_file = Path.cwd() / ".env"
+    env_lines = []
+    key_found = False
+    
+    if env_file.exists():
+        with open(env_file, 'r') as f:
+            for line in f:
+                if line.startswith(f"{key_name}="):
+                    env_lines.append(f"{key_name}={key_value}\n")
+                    key_found = True
+                else:
+                    env_lines.append(line)
+    
+    if not key_found:
+        env_lines.append(f"{key_name}={key_value}\n")
+    
+    with open(env_file, 'w') as f:
+        f.writelines(env_lines)
+    
+    con.print(f"[green]✅ Saved to .env file[/green]")
+    
+    # Also save to shell config on Unix-like systems
+    if platform.system() != "Windows":
+        home = Path.home()
+        shell = os.environ.get("SHELL", "")
+        
+        if "zsh" in shell:
+            rc_file = home / ".zshrc"
+        elif "bash" in shell:
+            rc_file = home / ".bashrc"
+        else:
+            rc_file = home / ".profile"
+        
+        # Check if already in file
+        if rc_file.exists():
+            with open(rc_file, 'r') as f:
+                content = f.read()
+                if f"export {key_name}=" not in content:
+                    with open(rc_file, 'a') as f:
+                        f.write(f'\nexport {key_name}="{key_value}"\n')
+                    con.print(f"[green]✅ Added to {rc_file.name}[/green]")
+    
+    # On Windows, optionally set user environment variable
+    elif platform.system() == "Windows":
+        response = typer.prompt("Save as Windows environment variable? (Y/n)", default="Y")
+        if response.lower() != 'n':
+            try:
+                subprocess.run(
+                    ["setx", key_name, key_value],
+                    capture_output=True,
+                    check=True
+                )
+                con.print(f"[green]✅ Saved as Windows user environment variable[/green]")
+                con.print("[yellow]Note: Restart your terminal for this to take effect[/yellow]")
+            except:
+                pass
 
 @typer_app.command()
 def doctor():
