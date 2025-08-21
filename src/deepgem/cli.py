@@ -1,5 +1,5 @@
 \
-import os, sys, subprocess
+import os, sys, subprocess, time
 from typing import Optional, List
 import typer
 from rich.console import Console
@@ -55,12 +55,7 @@ BANNER = r"""
 def maybe_print_banner(con: Console):
     if os.environ.get("DEEPGEM_NO_BANNER"):
         return
-    # Check if banner was already shown in this session
-    if os.environ.get("DEEPGEM_BANNER_SHOWN"):
-        return
     con.print(BANNER, style="bold")
-    # Mark banner as shown for this session
-    os.environ["DEEPGEM_BANNER_SHOWN"] = "1"
 
 # ---------------- Typer app ----------------
 typer_app = typer.Typer(help="DeepSeek ↔ Gemini CLI agent")

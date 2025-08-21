@@ -19,7 +19,16 @@ if %errorlevel% neq 0 (
 
 echo [2/5] Creating command shortcuts...
 echo @python -m deepgem %%* > "%USERPROFILE%\deepgem.bat"
-echo @python -m deepgem gem -p "%%*" --include-directories . > "%USERPROFILE%\dg.bat"
+(
+echo @echo off
+echo if not defined DEEPGEM_BANNER_SHOWN ^(
+echo     python -m deepgem gem -p "%%*" --include-directories .
+echo     set DEEPGEM_BANNER_SHOWN=1
+echo ^) else ^(
+echo     set DEEPGEM_NO_BANNER=1
+echo     python -m deepgem gem -p "%%*" --include-directories .
+echo ^)
+) > "%USERPROFILE%\dg.bat"
 
 echo [3/5] Adding to PATH permanently...
 :: Check if already in PATH to avoid duplicates
