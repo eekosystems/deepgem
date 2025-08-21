@@ -96,12 +96,16 @@ pip install .
 # Navigate to any project folder
 cd your-project
 
-# Use the super simple 'dg' command:
+# Use the super simple 'dg' command (quotes required for multi-word prompts):
 dg "what does this code do?"
 dg "fix the bugs"
 dg "add error handling"
 dg "write unit tests"
 dg "refactor this code"
+
+# Single words work without quotes:
+dg hello
+dg test
 ```
 
 ### Regular Commands
