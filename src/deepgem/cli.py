@@ -3,6 +3,7 @@ import os, sys, subprocess
 from typing import Optional, List
 import typer
 from rich.console import Console
+from pathlib import Path
 
 # Fix Windows console encoding for Unicode characters
 if sys.platform == "win32":
@@ -11,6 +12,17 @@ if sys.platform == "win32":
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
     # Also set console code page to UTF-8
     os.system("chcp 65001 >nul 2>&1")
+
+# Load .env file if it exists
+env_file = Path.cwd() / ".env"
+if env_file.exists():
+    with open(env_file) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                if key not in os.environ:  # Don't override existing env vars
+                    os.environ[key] = value.strip('"').strip("'")
 
 # OpenAI SDK works with DeepSeek via base_url
 from openai import OpenAI
@@ -97,7 +109,6 @@ def run_gemini_cli(
     import shutil
     import platform
     import json
-    from pathlib import Path
     
     # Check if Gemini is configured
     if not os.environ.get("GEMINI_API_KEY"):
