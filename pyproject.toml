@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "deepgem"
+version = "0.1.0"
+description = "DeepSeek ↔ Gemini CLI agent with smart routing. Talk to DeepSeek V3.1; delegate tool/code tasks to Gemini CLI."
+readme = "README.md"
+authors = [{ name = "Eeko Systems" }]
+license = "MIT"
+requires-python = ">=3.10"
+keywords = ["deepseek", "gemini", "cli", "agent", "router", "llm"]
+dependencies = [
+  "openai>=1.30.0",
+  "typer>=0.12.3",
+  "rich>=13.7.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2.0",
+  "ruff>=0.4.0",
+  "pre-commit>=3.7.0",
+  "build>=1.2.1",
+  "twine>=5.1.1",
+]
+
+[project.scripts]
+deepgem = "deepgem.cli:typer_app"
+
+[project.urls]
+Homepage = "https://github.com/yourname/deepgem"
+Issues = "https://github.com/yourname/deepgem/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/deepgem"]
+
+[tool.ruff]
+line-length = 100
