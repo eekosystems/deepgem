@@ -6,6 +6,8 @@
 ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝    ╚═════╝ ╚══════╝╚═╝     ╚═╝
 
 
+
+
 **deepgem** is a terminal agent that routes prompts between:
 - **DeepSeek V3.1** via its OpenAI-compatible API (fast chat or deliberate reasoning), and
 - the official **Gemini CLI** for agentic tool-use (shell/file ops, web fetch/search, MCP).
