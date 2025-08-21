@@ -16,7 +16,9 @@
       "Bash(git push:*)",
       "Bash(gemini:*)",
       "Bash(C:Usersthomadg.bat \"how are you doing today?\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git rm:*)",
+      "Bash(C:Usersthomadg.bat \"hello\")"
     ],
     "deny": [],
     "ask": []
