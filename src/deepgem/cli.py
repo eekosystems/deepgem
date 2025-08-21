@@ -12,9 +12,9 @@ BANNER = r"""
 ██████╗ ███████╗███████╗██████╗     ██████╗ ███████╗███╗   ███╗
 ██╔══██╗██╔════╝██╔════╝██╔══██╗   ██╔════╝ ██╔════╝████╗ ████║
 ██║  ██║█████╗  █████╗  ██████╔╝   ██║  ███╗█████╗  ██╔████╔██║
-██║  ██║██╔══╝  ██╔══╝  ██╔══██╗   ██║   ██║██╔══╝  ██║╚██╔╝██║
-██████╔╝███████╗███████╗██║  ██║   ╚██████╔╝███████╗██║ ╚═╝ ██║
-╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝    ╚═════╝ ╚══════╝╚═╝     ╚═╝
+██║  ██║██╔══╝  ██╔══╝  ██╔═══╝    ██║   ██║██╔══╝  ██║╚██╔╝██║
+██████╔╝███████╗███████╗██║        ╚██████╔╝███████╗██║ ╚═╝ ██║
+╚═════╝ ╚══════╝╚══════╝╚═╝         ╚═════╝ ╚══════╝╚═╝     ╚═╝
                       
                       deepgem by eeko systems
 """
@@ -170,3 +170,95 @@ def ask(
         raise typer.Exit(code=deepseek_chat(prompt, "deepseek-reasoner", system, stream=True))
     else:
         raise typer.Exit(code=deepseek_chat(prompt, "deepseek-chat", system, stream=True))
+
+@typer_app.command()
+def doctor():
+    """Check your deepgem setup and diagnose common issues."""
+    import shutil
+    import platform
+    
+    issues = []
+    warnings = []
+    
+    con.print("\n[bold cyan]deepgem doctor[/bold cyan] - Checking your setup...\n")
+    
+    # Check Python version
+    py_version = sys.version_info
+    if py_version >= (3, 10):
+        con.print("✅ Python version: [green]" + platform.python_version() + "[/green]")
+    else:
+        con.print(f"❌ Python version: [red]{platform.python_version()}[/red] (requires 3.10+)")
+        issues.append("Python 3.10+ required. Upgrade Python.")
+    
+    # Check DeepSeek API key
+    deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
+    if deepseek_key:
+        if deepseek_key.startswith("sk-"):
+            con.print("✅ DeepSeek API key: [green]configured[/green]")
+        else:
+            con.print("⚠️  DeepSeek API key: [yellow]found but may be invalid[/yellow]")
+            warnings.append("DEEPSEEK_API_KEY should start with 'sk-'")
+    else:
+        con.print("❌ DeepSeek API key: [red]not found[/red]")
+        issues.append("Set DEEPSEEK_API_KEY environment variable")
+    
+    # Check Gemini CLI
+    gemini_path = shutil.which(os.environ.get("GEMINI_BIN", "gemini"))
+    if gemini_path:
+        con.print(f"✅ Gemini CLI: [green]found[/green] at {gemini_path}")
+        
+        # Check Gemini API key
+        gemini_key = os.environ.get("GEMINI_API_KEY")
+        if gemini_key:
+            con.print("✅ Gemini API key: [green]configured[/green]")
+        else:
+            con.print("⚠️  Gemini API key: [yellow]not found[/yellow]")
+            warnings.append("GEMINI_API_KEY not set - Gemini may require OAuth instead")
+    else:
+        con.print("❌ Gemini CLI: [red]not found[/red]")
+        issues.append("Install with: npm install -g @google/gemini-cli")
+    
+    # Check OpenAI package
+    try:
+        import openai
+        con.print(f"✅ OpenAI SDK: [green]installed[/green] (v{openai.__version__})")
+    except ImportError:
+        con.print("❌ OpenAI SDK: [red]not installed[/red]")
+        issues.append("Install deepgem dependencies: pip install deepgem")
+    
+    # Test DeepSeek connection (optional)
+    if deepseek_key and not issues:
+        con.print("\n[dim]Testing DeepSeek connection...[/dim]")
+        try:
+            client = OpenAI(api_key=deepseek_key, base_url="https://api.deepseek.com")
+            response = client.models.list()
+            con.print("✅ DeepSeek API: [green]connected successfully[/green]")
+        except Exception as e:
+            con.print(f"⚠️  DeepSeek API: [yellow]connection failed[/yellow]")
+            warnings.append(f"DeepSeek connection error: {str(e)[:100]}")
+    
+    # Summary
+    con.print("\n" + "─" * 50)
+    if not issues and not warnings:
+        con.print("\n[bold green]✨ All systems operational![/bold green]")
+        con.print("\nTry these commands:")
+        con.print("  deepgem chat \"Hello, world!\"")
+        con.print("  deepgem ask \"Write a Python hello world script\"")
+        if gemini_path:
+            con.print("  deepgem gem -p \"List files in current directory\"")
+    elif issues:
+        con.print(f"\n[bold red]Found {len(issues)} issue(s) to fix:[/bold red]")
+        for i, issue in enumerate(issues, 1):
+            con.print(f"  {i}. {issue}")
+        if warnings:
+            con.print(f"\n[bold yellow]Also {len(warnings)} warning(s):[/bold yellow]")
+            for warning in warnings:
+                con.print(f"  ⚠️  {warning}")
+    else:
+        con.print(f"\n[bold yellow]Setup looks good with {len(warnings)} warning(s):[/bold yellow]")
+        for warning in warnings:
+            con.print(f"  ⚠️  {warning}")
+        con.print("\n[green]You should be ready to use deepgem![/green]")
+    
+    con.print("")
+    return 0 if not issues else 1

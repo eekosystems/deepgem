@@ -8,13 +8,50 @@ It shows a fun ASCII banner: “deepgem by eeko systems”.
 
 ## Install
 
-Prereqs:
-- Python 3.10+
-- DeepSeek API key in `DEEPSEEK_API_KEY`
-- Gemini CLI installed & authed (`npm i -g @google/gemini-cli` or `brew install gemini-cli`)
+### Quick Install (Recommended)
 
-From source:
 ```bash
+# One-line installer (Linux/macOS)
+curl -sSL https://raw.githubusercontent.com/eekosystems/deepgem/main/install.sh | bash
+
+# Or install from PyPI
+pip install deepgem
+
+# Then verify your setup
+deepgem doctor
+```
+
+### Manual Install
+
+Prerequisites:
+- Python 3.10+
+- Node.js/npm (for Gemini CLI)
+- DeepSeek API key
+
+```bash
+# Install deepgem
+pip install deepgem
+# or with pipx (recommended for isolation)
+pipx install deepgem
+
+# Install Gemini CLI
+npm install -g @google/gemini-cli
+# or
+brew install gemini-cli
+
+# Set up API keys
+export DEEPSEEK_API_KEY="sk-..."
+export GEMINI_API_KEY="..."  # optional, can use OAuth instead
+
+# Verify installation
+deepgem doctor
+```
+
+### From Source
+
+```bash
+git clone https://github.com/eekosystems/deepgem
+cd deepgem
 pipx install .
 # or
 pip install .
