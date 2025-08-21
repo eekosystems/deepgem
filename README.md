@@ -40,18 +40,7 @@ dg "analyze this code"   # Use Gemini for code analysis
 - Installs Gemini CLI (if npm is available)
 - Fixes Windows-specific PATH and encoding issues
 
-### Quick Install (Recommended)
 
-```bash
-# Install from PyPI (when published)
-pip install deepgem
-
-# Run interactive setup wizard
-deepgem setup
-
-# Or use one-line installer (Linux/macOS)
-curl -sSL https://raw.githubusercontent.com/eekosystems/deepgem/main/install.sh | bash
-```
 
 ### Manual Install
 
