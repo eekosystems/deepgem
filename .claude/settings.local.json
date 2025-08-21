@@ -6,7 +6,13 @@
       "Bash(node:*)",
       "Bash(python:*)",
       "Bash(copy:*)",
-      "Bash(cmd /c \"copy C:\\Users\\thoma\\OneDrive\\Desktop\\deepgem\\dg.bat C:\\Users\\thoma\\dg.bat\")"
+      "Bash(cmd /c \"copy C:\\Users\\thoma\\OneDrive\\Desktop\\deepgem\\dg.bat C:\\Users\\thoma\\dg.bat\")",
+      "Bash(dir C:Usersthomadg.bat)",
+      "Bash(cmd /c:*)",
+      "Bash(C:Usersthomadg.bat \"test\")",
+      "Bash(where gemini)",
+      "Bash(dir:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

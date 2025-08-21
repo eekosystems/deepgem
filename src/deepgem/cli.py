@@ -94,7 +94,57 @@ def run_gemini_cli(
     extra: Optional[List[str]] = None,
 ) -> int:
     # Requires `gemini` in PATH. Non-interactive uses -p/--prompt.
-    cmd: List[str] = [os.environ.get("GEMINI_BIN", "gemini")]
+    import shutil
+    import platform
+    import json
+    from pathlib import Path
+    
+    # Check if Gemini is configured
+    if not os.environ.get("GEMINI_API_KEY"):
+        settings_path = Path.home() / ".gemini" / "settings.json"
+        if not settings_path.exists() or not settings_path.read_text().strip():
+            con.print("\n[yellow]Gemini CLI needs authentication.[/yellow]")
+            con.print("\nChoose an option:")
+            con.print("1. Enter API key (recommended)")
+            con.print("2. Skip for now")
+            con.print("\nGet your API key at: [cyan]https://makersuite.google.com/app/apikey[/cyan]")
+            
+            choice = typer.prompt("\nEnter choice (1/2)", default="1")
+            
+            if choice == "1":
+                api_key = typer.prompt("\nPaste your Gemini API key", hide_input=True)
+                if api_key:
+                    os.environ["GEMINI_API_KEY"] = api_key
+                    # Save to .env file for persistence
+                    env_file = Path.cwd() / ".env"
+                    with open(env_file, "a") as f:
+                        f.write(f"\nGEMINI_API_KEY={api_key}\n")
+                    con.print("[green]✅ API key saved! Continuing with your request...[/green]\n")
+                    # Don't return, continue with the command
+                else:
+                    con.print("[red]No key entered. Exiting.[/red]")
+                    return 1
+            else:
+                con.print("[yellow]Skipped. Set up authentication later with:[/yellow]")
+                con.print("  set GEMINI_API_KEY=your-key")
+                con.print("  Then try your command again.")
+                return 0
+    
+    # Try to find gemini more aggressively on Windows
+    gemini_cmd = os.environ.get("GEMINI_BIN", "gemini")
+    if platform.system() == "Windows" and not shutil.which(gemini_cmd):
+        # Check common npm locations on Windows
+        possible_paths = [
+            os.path.join(os.environ.get("APPDATA", ""), "npm", "gemini.cmd"),
+            os.path.join(os.environ.get("USERPROFILE", ""), "AppData", "Roaming", "npm", "gemini.cmd"),
+            "gemini.cmd"
+        ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                gemini_cmd = path
+                break
+    
+    cmd: List[str] = [gemini_cmd]
     if prompt:
         cmd += ["-p", prompt]
     if model:
@@ -107,12 +157,12 @@ def run_gemini_cli(
         cmd += extra
 
     try:
-        proc = subprocess.run(cmd, text=True)
+        proc = subprocess.run(cmd, text=True, shell=(platform.system() == "Windows"))
         return proc.returncode
-    except FileNotFoundError:
+    except (FileNotFoundError, OSError) as e:
         con.print(
-            "[red]Gemini CLI not found.[/red] Install with "
-            "[bold]npm i -g @google/gemini-cli[/bold] or [bold]brew install gemini-cli[/bold]."
+            f"[red]Gemini CLI not found or error:[/red] {e}\n"
+            "Install with [bold]npm i -g @google/gemini-cli[/bold] or [bold]brew install gemini-cli[/bold]."
         )
         return 127
 

@@ -17,9 +17,28 @@ cd deepgem
 # Run the one-click installer
 quickinstall.bat
 
-# That's it! Now you can use:
-deepgem chat "hello"
+# IMPORTANT: Close and reopen your terminal after install!
+
+# Set up authentication (one time only):
+# For DeepSeek (required):
+set DEEPSEEK_API_KEY=sk-your-key-here
+
+# For Gemini (choose one):
+gemini auth              # OAuth login (recommended)
+# OR
+set GEMINI_API_KEY=your-gemini-key
+
+# Then you can use:
+deepgem chat "hello"     # Talk to DeepSeek
+dg "analyze this code"   # Use Gemini for code analysis
 ```
+
+**Note:** The installer automatically:
+- Installs deepgem
+- Creates `deepgem` and `dg` commands  
+- Adds them to your PATH
+- Installs Gemini CLI (if npm is available)
+- Fixes Windows-specific PATH and encoding issues
 
 ### Quick Install (Recommended)
 
@@ -125,9 +144,42 @@ export DEEPSEEK_API_KEY="sk-..."     # required
 - **Fixed:** Automatically detects `npm.cmd` on Windows
 - If Node.js is installed but npm isn't found, run: `winget install OpenJS.NodeJS`
 
+### PATH Issues (Windows)
+- **Fixed:** `quickinstall.bat` now automatically adds commands to PATH
+- If `dg` or `gemini` commands aren't found after install:
+  ```bash
+  # Add npm and user directory to PATH
+  setx PATH "%PATH%;C:\Users\%USERNAME%\AppData\Roaming\npm;C:\Users\%USERNAME%"
+  # Then restart your terminal
+  ```
+
 ### The 'dg' Command
-- Created by `quickinstall.bat` or manually copy `dg.bat` to your PATH
+- Automatically created by `quickinstall.bat` 
+- Adds both `deepgem` and `dg` commands to your PATH
+- **IMPORTANT:** Always restart terminal after running `quickinstall.bat`
 - Makes coding assistance super simple - just `dg "your request"`
+
+## Important: Authentication Required
+
+### DeepSeek (Required)
+Get your API key from https://platform.deepseek.com/
+```bash
+set DEEPSEEK_API_KEY=sk-your-key-here
+```
+
+### Gemini (Required for `dg` command)
+Option 1: OAuth (Recommended - opens browser for Google login)
+```bash
+gemini auth
+```
+
+Option 2: API Key
+```bash
+set GEMINI_API_KEY=your-key-here
+```
+Get key from: https://makersuite.google.com/app/apikey
+
+Without authentication, you'll see error messages when trying to use the commands.
 
 ## Notes
 - DeepSeek API is OpenAI-compatible; model IDs: `deepseek-chat` (non-thinking) and `deepseek-reasoner` (thinking).
