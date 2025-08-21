@@ -19,7 +19,9 @@
       "Bash(git commit:*)",
       "Bash(git rm:*)",
       "Bash(C:Usersthomadg.bat \"hello\")",
-      "Bash(where python)"
+      "Bash(where python)",
+      "WebSearch",
+      "WebFetch(domain:api-docs.deepseek.com)"
     ],
     "deny": [],
     "ask": []
