@@ -13,10 +13,23 @@ if sys.platform == "win32":
     # Also set console code page to UTF-8
     os.system("chcp 65001 >nul 2>&1")
 
-# Load .env file if it exists
-env_file = Path.cwd() / ".env"
-if env_file.exists():
-    with open(env_file) as f:
+# Load .env file from home directory (global) and current directory (local)
+home_env = Path.home() / ".deepgem.env"
+local_env = Path.cwd() / ".env"
+
+# Load global env first
+if home_env.exists():
+    with open(home_env) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                if key not in os.environ:  # Don't override existing env vars
+                    os.environ[key] = value.strip('"').strip("'")
+
+# Load local env (can override global)
+if local_env.exists():
+    with open(local_env) as f:
         for line in f:
             line = line.strip()
             if line and not line.startswith('#') and '=' in line:
@@ -126,11 +139,12 @@ def run_gemini_cli(
                 api_key = typer.prompt("\nPaste your Gemini API key", hide_input=True)
                 if api_key:
                     os.environ["GEMINI_API_KEY"] = api_key
-                    # Save to .env file for persistence
-                    env_file = Path.cwd() / ".env"
-                    with open(env_file, "a") as f:
+                    # Save to global .deepgem.env file for persistence
+                    global_env_file = Path.home() / ".deepgem.env"
+                    with open(global_env_file, "a") as f:
                         f.write(f"\nGEMINI_API_KEY={api_key}\n")
-                    con.print("[green]✅ API key saved! Continuing with your request...[/green]\n")
+                    con.print(f"[green]✅ API key saved globally to {global_env_file}![/green]")
+                    con.print("[green]You won't need to enter it again.[/green]\n")
                     # Don't return, continue with the command
                 else:
                     con.print("[red]No key entered. Exiting.[/red]")
@@ -384,12 +398,12 @@ def setup():
     return doctor()
 
 def save_key_to_env(key_name: str, key_value: str):
-    """Save API key to .env file and appropriate shell config."""
+    """Save API key to global .deepgem.env file and appropriate shell config."""
     import platform
     from pathlib import Path
     
-    # Save to .env file in current directory
-    env_file = Path.cwd() / ".env"
+    # Save to global .deepgem.env file in home directory
+    env_file = Path.home() / ".deepgem.env"
     env_lines = []
     key_found = False
     

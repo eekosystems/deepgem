@@ -18,7 +18,8 @@
       "Bash(C:Usersthomadg.bat \"how are you doing today?\")",
       "Bash(git commit:*)",
       "Bash(git rm:*)",
-      "Bash(C:Usersthomadg.bat \"hello\")"
+      "Bash(C:Usersthomadg.bat \"hello\")",
+      "Bash(where python)"
     ],
     "deny": [],
     "ask": []

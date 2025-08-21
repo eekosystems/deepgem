@@ -25,8 +25,10 @@ echo set DEEPGEM_NO_BANNER=1
 echo python -m deepgem gem -p "%%*" --include-directories .
 ) > "%USERPROFILE%\dg.bat"
 
-echo [3/5] Adding to PATH...
-setx PATH "%PATH%;%USERPROFILE%;%APPDATA%\npm" >nul 2>&1
+echo [3/5] Adding to PATH permanently...
+:: Check if already in PATH to avoid duplicates
+echo %PATH% | find /i "%USERPROFILE%" >nul || setx PATH "%PATH%;%USERPROFILE%" >nul 2>&1
+echo %PATH% | find /i "%APPDATA%\npm" >nul || setx PATH "%PATH%;%APPDATA%\npm" >nul 2>&1
 
 echo [4/5] Checking for Node.js/npm...
 where npm >nul 2>&1
